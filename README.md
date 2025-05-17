@@ -1,2 +1,5 @@
 # t-prompt
-Shell prompt 
+Shell prompt configured from env variables.
+
+TODO:
+* list vars 
