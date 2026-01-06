@@ -17,9 +17,12 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl
 
-      # 1. Install the 'cross' tool via cargo
+      # 1. Install the 'cross' tool and UPDATE THE PATH
       - name: Install Cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          # This line tells GitHub to add the cargo bin folder to PATH for all future steps
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       # 2. Dependencies for the GLIBC build part of your Makefile
       - name: Install host dependencies
