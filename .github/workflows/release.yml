@@ -8,6 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # --- THIS BLOCK IS THE KEY ---
+    # It gives the automatic GITHUB_TOKEN permission to upload files
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -17,20 +21,16 @@ jobs:
         with:
           targets: x86_64-unknown-linux-musl
 
-      # 1. Install the 'cross' tool and UPDATE THE PATH
       - name: Install Cross
         run: |
           cargo install cross --git https://github.com/cross-rs/cross
-          # This line tells GitHub to add the cargo bin folder to PATH for all future steps
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      # 2. Dependencies for the GLIBC build part of your Makefile
       - name: Install host dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev perl
 
-      # 3. Build using your Makefile
       - name: Build Release Package
         run: make release
 
@@ -39,4 +39,5 @@ jobs:
         with:
           files: "*.tar.gz"
           draft: false
-          token: ${{ secrets.GH_PAT }}
+          # Use the AUTOMATIC token provided by GitHub
+          token: ${{ secrets.GITHUB_TOKEN }}
