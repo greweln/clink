@@ -67,11 +67,12 @@ install: build
 	@echo "$(BOLD)$(GREEN)Installation complete!$(RESET)"
 
 # =========================================================================
-# release Target: Builds portable MUSL binary using Podman/Cross
+# release Target: Builds portable glibc and MUSL binaries
 # =========================================================================
-# Requirements:
-# cargo install cross --git https://github.com/cross-rs/cross
-# dnf install podman openssl-devel
+# *  Local: Uses Podman + Cross (Requires: 
+#    - cargo install cross --git https://github.com/cross-rs/cross
+#    - dnf install podman openssl-devel
+# * CI/CD: Uses Docker + Cross (GitHub Actions)
 release:
 	@echo "$(BOLD)$(YELLOW)Cleaning old release artifacts ...$(RESET)"
 	rm -rf $(DIST_DIR)
