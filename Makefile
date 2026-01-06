@@ -1,7 +1,6 @@
 # =========================================================================
 # ANSI Color and Style Definitions
 # =========================================================================
-# Define standard colors/styles for readable terminal output
 BOLD := \033[1m
 GREEN := \033[32m
 YELLOW := \033[33m
@@ -12,104 +11,114 @@ RESET := \033[0m
 # Application Variables
 # =========================================================================
 APP_NAME=clink
+VERSION := $(shell git describe --tags --always --dirty)
+
+# Paths
+BIN_DEST=$(HOME)/bin
+CONFIG_DEST=$(HOME)/.config/$(APP_NAME)
 CACHE_FILE=$(HOME)/.cache/$(APP_NAME)
+
+# Source files
 CONFIG_SRC=config/default.toml
 SCRIPT_SRC=scripts/update_cache.py
-CONFIG_DEST=$(HOME)/.config/$(APP_NAME)
+
+# Target files
 CONFIG_FILE=$(CONFIG_DEST)/config.toml
 SCRIPT_FILE=$(CONFIG_DEST)/update_cache.py
-BIN_DEST=$(HOME)/bin
-PYTHON=/usr/bin/python3  # Adjust if python3 is elsewhere
-VERSION := $(shell git describe --tags --always --dirty)
-DIST_DIR = dist/$(APP_NAME)-$(VERSION)
+
+# Tools
+PYTHON=/usr/bin/python3
 MUSL_TARGET = x86_64-unknown-linux-musl
+DIST_DIR = dist/$(APP_NAME)-$(VERSION)
 
-.PHONY: all install uninstall build release
+.PHONY: all install uninstall build release clean
 
-all: install
+all: build
 
 # =========================================================================
-# build Target: Compiles and places the binary
+# build Target: Compiles and places the binary locally (GLIBC)
 # =========================================================================
 build:
-	
-	@echo -e  "$(BOLD)$(GREEN)Compiling binary ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Compiling binary (Debug/Local) ...$(RESET)"
 	cargo build --release
-	
-	@echo -e "$(BOLD)$(GREEN)Creating $(BIN_DEST) ...$(RESET)"
-	mkdir -p $(BIN_DEST)
-	
-	@echo -e "$(BOLD)$(GREEN)Deploying binary ...$(RESET)"
+	@mkdir -p $(BIN_DEST)
+	@echo "$(BOLD)$(GREEN)Deploying binary to $(BIN_DEST) ...$(RESET)"
 	cp -u target/release/$(APP_NAME) $(BIN_DEST)/$(APP_NAME)
-	
+
 # =========================================================================
 # install Target: Sets up config, script, and cronjob
 # =========================================================================
 install: build
-	@echo "$(BOLD)$(GREEN)Creating $(CONFIG_DEST) ...$(RESET)"
-	mkdir -p $(CONFIG_DEST)
-	
-	@echo "$(BOLD)$(GREEN)Copying default config ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Setting up configuration in $(CONFIG_DEST) ...$(RESET)"
+	@mkdir -p $(CONFIG_DEST)
 	cp -u $(CONFIG_SRC) $(CONFIG_FILE)
-	
-	@echo "$(BOLD)$(GREEN)Copying background script ...$(RESET)"
 	cp -u $(SCRIPT_SRC) $(SCRIPT_FILE)
 	chmod +x $(SCRIPT_FILE)
 	
-	@echo "$(BOLD)$(GREEN)Creating cache file ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Initializing cache file ...$(RESET)"
+	@mkdir -p $(shell dirname $(CACHE_FILE))
 	touch $(CACHE_FILE)
 
-	@echo "$(BOLD)$(GREEN)Setting up cronjob ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Configuring cronjob (every 10 min) ...$(RESET)"
+	# Remove any existing clink cronjob and add the new one using variables
 	@(crontab -l 2>/dev/null | grep -v "$(APP_NAME)/update_cache.py"; \
 	  echo "*/10 * * * * $(PYTHON) $(SCRIPT_FILE)") | crontab -
 	
-	@echo "$(BOLD)$(GREEN)Installation complete.$(RESET)"
-	
+	@echo "$(BOLD)$(GREEN)Installation complete!$(RESET)"
+
 # =========================================================================
-# uninstall Target: Removes all installed components
+# release Target: Builds portable MUSL binary using Podman/Cross
 # =========================================================================
-uninstall:
-	@echo "$(BOLD)$(GREEN)Removing cronjob ...$(RESET)"
-	@crontab -l 2>/dev/null | grep -v "$(APP_NAME)/update_cache.py" | crontab - || crontab -r
-	
-	@echo "$(BOLD)$(GREEN)Removing config directory ...$(RESET)"
-	rm -rf $(CONFIG_DEST)
-	
-	@echo "$(BOLD)$(GREEN)Removing binary ...$(RESET)"
-	rm -f $(BIN_DEST)/$(APP_NAME)
-	
-	@echo "$(BOLD)$(GREEN)Removing cache file ...$(RESET)"
-	rm -f $(CACHE_FILE)	
-# =========================================================================
-# release Target: Builds cross-compiled static binaries and creates tarballs
-# =========================================================================
+# Requirements:
+# cargo install cross --git https://github.com/cross-rs/cross
+# dnf install podman openssl-devel
 release:
-	@echo -e "$(BOLD)$(GREEN)Building glibc release ...$(RESET)"
+	@echo "$(BOLD)$(YELLOW)Cleaning old release artifacts ...$(RESET)"
+	rm -rf $(DIST_DIR)
+	rm -rf target/cross
+	
+	@echo "$(BOLD)$(GREEN)Building GLIBC binary (Host) ...$(RESET)"
 	cargo build --release
 	
-	@echo -e "$(BOLD)$(GREEN)Building MUSL static binary ...$(RESET)"
-	# rustup target add $(MUSL_TARGET) >/dev/null 2>&1 || true
-	cargo build --release --target $(MUSL_TARGET) --features musl
+	@echo "$(BOLD)$(GREEN)Building MUSL binary (Container via Cross) ...$(RESET)"
+	cross build --release --target $(MUSL_TARGET) --target-dir target/cross
 	
-	@echo -e "$(BOLD)$(GREEN)Preparing Distribution Directories ...$(RESET)"
-	rm -rf $(DIST_DIR)
+	@echo "$(BOLD)$(GREEN)Preparing distribution folders ...$(RESET)"
 	mkdir -p $(DIST_DIR)/$(APP_NAME)-glibc
 	mkdir -p $(DIST_DIR)/$(APP_NAME)-musl
 	
-	@echo -e "$(BOLD)$(GREEN)Copying glibc files ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Packaging binaries ...$(RESET)"
 	cp target/release/$(APP_NAME) $(DIST_DIR)/$(APP_NAME)-glibc/
+	cp target/cross/$(MUSL_TARGET)/release/$(APP_NAME) $(DIST_DIR)/$(APP_NAME)-musl/
+	
+	# Copy support files to both dist folders
 	cp $(CONFIG_SRC) $(DIST_DIR)/$(APP_NAME)-glibc/config.toml
 	cp $(SCRIPT_SRC) $(DIST_DIR)/$(APP_NAME)-glibc/update_cache.py
-	
-	@echo -e "$(BOLD)$(GREEN)Copying musl files ...$(RESET)"
-	cp target/$(MUSL_TARGET)/release/$(APP_NAME) $(DIST_DIR)/$(APP_NAME)-musl/
 	cp $(CONFIG_SRC) $(DIST_DIR)/$(APP_NAME)-musl/config.toml
 	cp $(SCRIPT_SRC) $(DIST_DIR)/$(APP_NAME)-musl/update_cache.py
 	
-	@echo -e "$(BOLD)$(GREEN)Creating tarballs ...$(RESET)"
+	@echo "$(BOLD)$(GREEN)Creating tarballs ...$(RESET)"
 	tar -czvf $(APP_NAME)-$(VERSION)-linux-x86_64-glibc.tar.gz -C $(DIST_DIR) $(APP_NAME)-glibc
 	tar -czvf $(APP_NAME)-$(VERSION)-linux-x86_64-musl.tar.gz -C $(DIST_DIR) $(APP_NAME)-musl
 	
-	@echo -e "$(BOLD)$(GREEN)Release tarballs created:$(RESET)"
-	@echo -e "$(APP_NAME)-$(VERSION)-linux-x86_64-glibc.tar.gz"
-	@echo -e "$(APP_NAME)-$(VERSION)-linux-x86_64-musl.tar.gz"
+	@echo -e "\n$(BOLD)$(YELLOW)Final Binary Sizes:$(RESET)"
+	@ls -lh target/release/$(APP_NAME) | awk '{print "GLIBC: " $$5}'
+	@ls -lh target/cross/$(MUSL_TARGET)/release/$(APP_NAME) | awk '{print "MUSL:  " $$5}'
+
+# =========================================================================
+# uninstall Target: Complete cleanup
+# =========================================================================
+uninstall:
+	@echo "$(BOLD)$(RED)Removing cronjob ...$(RESET)"
+	@crontab -l 2>/dev/null | grep -v "$(APP_NAME)/update_cache.py" | crontab - || crontab -r
+	
+	@echo "$(BOLD)$(RED)Deleting configuration and binary ...$(RESET)"
+	rm -rf $(CONFIG_DEST)
+	rm -f $(BIN_DEST)/$(APP_NAME)
+	rm -f $(CACHE_FILE)
+	@echo "$(BOLD)$(GREEN)Uninstallation complete.$(RESET)"
+
+clean:
+	cargo clean
+	rm -rf dist/
+	rm -f *.tar.gz

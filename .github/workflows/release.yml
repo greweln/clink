@@ -1,0 +1,33 @@
+name: Build and Release (Linux)
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+
+      - name: Install musl dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools musl-dev pkg-config libssl-dev perl
+
+      - name: Build Release Package
+        run: make release
+
+      - name: Upload Release Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.tar.gz"
+          draft: false
+          token: ${{ secrets.GH_PAT }}

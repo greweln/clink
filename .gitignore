@@ -1,1 +1,19 @@
-/target
+# --- Rust/Cargo ---
+# Ignore the entire build directory
+/target/
+
+# --- Release Artifacts ---
+# Ignore the distribution folder created by Makefile
+/dist/
+
+# Ignore the final tarballs (glibc and musl)
+*.tar.gz
+
+# --- Local Cache & Secrets ---
+# Ignore the clink cache used for testing locally
+.cache/
+
+# --- IDEs & System ---
+.vscode/
+.idea/
+.DS_Store
