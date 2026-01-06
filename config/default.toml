@@ -1,0 +1,114 @@
+# ==============================================================================
+#                     CLINK CONFIGURATION EXAMPLE
+# ==============================================================================
+# This file defines the appearance and behavior of your terminal prompt.
+# Changes take effect the next time a prompt is rendered.
+
+# ------------------------------------------------------------------------------
+# 1. PROMPT LAYOUT
+# ------------------------------------------------------------------------------
+# The 'layout' array defines the order in which modules appear.
+#
+# SPECIAL MODULES:
+# - 'fill':   Always ends the first line. Fills remaining space with a character.
+# - 'symbol': The interactive cursor, always used as the last module of your prompt.
+#
+# Note: To disable a module, simply remove it from this list.
+# ------------------------------------------------------------------------------
+layout = [
+  "lbrack",
+  "pwd",
+  "permission", 
+  "rbrack",
+  "lparen",
+  "git",
+  "rparen",
+  "fill",
+  "symbol"
+]
+
+# ------------------------------------------------------------------------------
+# 2. BUILT-IN MODULES
+# ------------------------------------------------------------------------------
+# These modules pull data directly from your system.
+
+[pwd]
+# Displays the current working directory path.
+# Customizable style
+style = "grey"
+
+[username]
+# Displays the current user's login name.
+# Customizable style
+style = "grey"
+
+[permission]
+# Displayed only when you lack write permissions in the current directory.
+# Customizable displayed text and style.
+text = " <RO>" 
+style = "red"
+
+# ------------------------------------------------------------------------------
+# 3. GIT MODULE
+# ------------------------------------------------------------------------------
+# Integrated Git status tracking via libgit2.
+# ------------------------------------------------------------------------------
+[git]
+branch              = true
+branch_style        = "grey"
+
+state               = true
+state_clean         = "  "
+state_dirty         = " ! "
+state_clean_style   = "green"
+state_dirty_style   = "red"
+
+ahead_behind        = true
+ahead_behind_style  = "grey"
+ahead_symbol        = " "
+behind_symbol       = " "
+
+# ------------------------------------------------------------------------------
+# 4. CUSTOM TEXT MODULES
+# ------------------------------------------------------------------------------
+# Cutom modules can be defined as:
+#  [name]              # name to use in layout
+#  text = "example"    # text to be displayed
+#  style = "red"       # optionally change it's default style
+# ------------------------------------------------------------------------------
+[at]
+text = "@"
+style = "white"
+
+[lbrack]
+text = "[ "
+style = "grey"
+
+[rbrack]
+text = " ]"
+style = "grey"
+
+[lparen]
+text = "("
+style = "grey"
+
+[rparen]
+text = ") "
+style = "grey"
+
+# ------------------------------------------------------------------------------
+# 5. STRUCTURAL MODULES
+# ------------------------------------------------------------------------------
+# Optional modules that can customized.
+# ------------------------------------------------------------------------------
+
+[fill]
+# Fills the first line of the prompt to the right edge of the terminal.
+text = "-"
+style = "grey"
+
+[symbol]
+# The character(s) rendered at the start of the command line.
+# Based on your logic, this is the last module of the prompt.
+text = "> "
+style = "grey"
