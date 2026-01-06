@@ -99,9 +99,7 @@ To get real-time "Ahead/Behind" data, the updater script should be scheduled via
 
 ## 🐚 Activating Clink
 
-Add the following line to the end of your `~/.bashrc` (for Bash) or `~/.zshrc` (for Zsh):
-
-**For Bash:**
+Add the following line to the end of your `~/.bashrc`:
 
 ```bash
 PS1='$(clink)'

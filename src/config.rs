@@ -22,7 +22,7 @@ enum Module {
     Custom(String),
 }
 
-// Implement Display so we can convert the Enum to a String easily
+// Implement Display to convert the Enum to a String easily
 impl fmt::Display for Module {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -120,7 +120,6 @@ impl Config {
                 .render()?;
             prompt.push_str(&fill_rendered);
 
-            // We add the newline because Fill's job is to finish the line.
             prompt.push('\n');
         }
 
