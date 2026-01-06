@@ -74,7 +74,7 @@ To get real-time "Ahead/Behind" data, the updater script should be scheduled via
 
 - **Binary:** Compiles and installs the `clink` binary to your path.
 - **Config:** Installs `~/.config/clink/config.toml` (defines layout and styles).
-- **Cache:** Initializes `~/.cache/clink/cache` (stores repo timestamps).
+- **Cache:** Initializes `~/.cache/clink` (stores repo timestamps).
 - **Automation:** Installs `update_cache.py` and sets a **Cronjob** to run every 10 minutes.
 
 ### Option 2: Manual Setup
@@ -82,7 +82,7 @@ To get real-time "Ahead/Behind" data, the updater script should be scheduled via
 1. Download the latest release.
 2. Copy `update_cache.py` and `config.toml` to `~/.config/clink/`.
 3. Move the compiled `clink` binary into a directory in your **PATH** (e.g., `~/bin` or `/usr/local/bin`).
-4. Create the cache file: `mkdir -p ~/.cache/clink && touch ~/.cache/clink/cache`.
+4. Create the cache file: `touch ~/.cache/clink`.
 5. Manually set the cron job:
    `*/10 * * * * /usr/bin/python3 ~/.config/clink/update_cache.py`
 
