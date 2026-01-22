@@ -12,6 +12,13 @@ impl Render for Username {
     }
 }
 
+impl Render for Hostname {
+    fn render(&self) -> Result<String> {
+        let text = Hostname::text()?;
+        Ok(self.style.apply(&text))
+    }
+}
+
 impl Render for Pwd {
     fn render(&self) -> Result<String> {
         let text = Pwd::text()?;

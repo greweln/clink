@@ -37,6 +37,28 @@ impl Default for Username {
 }
 
 // ********************
+// ===== HOSTNAME ====
+// ********************
+#[derive(Deserialize, Debug, Clone)]
+pub struct Hostname {
+    pub style: Color,
+}
+impl Hostname {
+    pub fn text() -> Result<String> {
+        let hostname = env::var("HOSTNAME")?;
+        Ok(hostname)
+    }
+}
+
+impl Default for Hostname {
+    fn default() -> Self {
+        Self {
+            style: Color::Foreground,
+        }
+    }
+}
+
+// ********************
 //   ===== PWD ====
 // ********************
 #[derive(Deserialize, Debug)]

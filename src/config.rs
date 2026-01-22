@@ -10,6 +10,7 @@ use std::{
 #[serde(rename_all = "lowercase")]
 enum Module {
     Username,
+    Hostname,
     Pwd,
     Fill,
     Symbol,
@@ -36,6 +37,7 @@ impl fmt::Display for Module {
 pub struct Config {
     layout: Vec<Module>,
     username: Option<Username>,
+    hostname: Option<Hostname>,
     pwd: Option<Pwd>,
     git: Option<Git>,
     fill: Option<Fill>,
@@ -84,6 +86,11 @@ impl Config {
                     .username
                     .as_ref()
                     .map_or(Username::default().render(), |m| m.render())?,
+
+                Module::Hostname => self
+                    .hostname
+                    .as_ref()
+                    .map_or(Hostname::default().render(), |m| m.render())?,
 
                 Module::Pwd => self
                     .pwd
@@ -163,6 +170,7 @@ mod tests {
         Config {
             layout,
             username: None,
+            hostname: None,
             pwd: None,
             fill: None,
             git: None,

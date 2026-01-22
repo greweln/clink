@@ -42,6 +42,11 @@ style = "grey"
 # Customizable style
 style = "grey"
 
+[hostname]
+# Displays the hostname.
+# Customizable style
+style = "grey"
+
 [permission]
 # Displayed only when you lack write permissions in the current directory.
 # Customizable displayed text and style.
