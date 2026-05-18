@@ -1,19 +1,21 @@
-use crate::{CURRENT_GID, CURRENT_UID, DENIED, Result, SYMBOL, errors::Errors, style::Color};
+use crate::{CURRENT_UID, DENIED, Result, SYMBOL, errors::Errors, style::Color};
 use crate::{GIT_AHEAD, GIT_BEHIND, GIT_CLEAN, GIT_DIRTY};
 use ansi_str::AnsiStr;
 use dirs::home_dir;
 use fs2::FileExt;
 use git2::{ErrorCode, Repository};
 use serde::{Deserialize, Serialize};
+use std::ffi::CString;
+use std::os::unix::ffi::OsStrExt;
 use std::{
     env,
     fs::OpenOptions,
     io::Write,
-    os::unix::fs::MetadataExt,
     path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
 use terminal_size::{Width, terminal_size};
+
 // ********************
 // ===== USERNAME ====
 // ********************
@@ -109,6 +111,7 @@ impl Default for Pwd {
 // ********************
 //  ==== PERMISSION ===
 // ********************
+
 #[derive(Deserialize, Debug)]
 pub struct Permission {
     text: String,
@@ -116,29 +119,17 @@ pub struct Permission {
 }
 
 impl Permission {
-    /// Determine what should be displayed based on directory permissions.
     pub fn text(&self) -> Result<String> {
-        // Use ? to bubble up the error to main.rs if current_dir() or metadata() fails
         let path = std::env::current_dir()?;
-        let metadata = std::fs::metadata(&path)?;
-        let mode = metadata.mode();
 
-        let uid = *CURRENT_UID;
-        let gid = *CURRENT_GID;
-
-        // Root user: we don't need to show the "denied" text
-        if uid == 0 {
+        // Root user: skip RO indicator
+        if *CURRENT_UID == 0 {
             return Ok(String::new());
         }
 
-        // Check if the current user has write access
-        let writable = if metadata.uid() == uid {
-            mode & 0o200 != 0
-        } else if metadata.gid() == gid {
-            mode & 0o020 != 0
-        } else {
-            mode & 0o002 != 0
-        };
+        let c_path = CString::new(path.as_os_str().as_bytes())?;
+
+        let writable = unsafe { libc::access(c_path.as_ptr(), libc::W_OK) == 0 };
 
         if writable {
             Ok(String::new())
@@ -147,6 +138,7 @@ impl Permission {
         }
     }
 }
+
 impl Default for Permission {
     fn default() -> Self {
         Self {

@@ -1,3 +1,4 @@
+use std::ffi::NulError;
 use std::time::SystemTimeError;
 use thiserror::Error;
 
@@ -28,4 +29,6 @@ pub enum Errors {
     ModuleNotDefined(String),
     #[error("Layout is not defined")]
     EmptyLayout,
+    #[error("{0}")]
+    NullError(#[from] NulError),
 }
